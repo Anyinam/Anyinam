@@ -1,0 +1,100 @@
+**---
+title: "Social Science"
+output:
+  pdf_document: default
+  html_document: html_document
+date: "2023-05-01"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+# QUESTION 1 A
+# READ CSV FILE
+```{r }
+
+df <- read.csv2("D:\\Social ScienceProject #3 (1)\\Project\\shiw_2016.csv")
+str(df)
+
+```
+```{r }
+summary(df)
+
+```
+
+## GROUPING ETA
+```{r }
+df$age_class <- cut(df$eta, breaks = c(0, 30, 65, Inf), labels = c("young", "adult", "old"))
+str(df)
+```
+
+## QUESTION 2 B
+# GROUPING CONSUMTION
+```{r }
+min(df$c)
+max(df$c)
+
+# finding the mid consumption
+threshold <- min(df$c[df$c > min(df$c)])
+threshold
+
+df$T_c <- cut(df$c, breaks=c(min(df$c), threshold, max(df$c)), labels=c("Low","High"))
+df$T_c
+```
+### QUESTION 2 C
+# COMPUTING CONTINGENCY TABLE
+```{r }
+conti <- table(df$age_class, df$T_c)
+conti 
+```
+
+## MARGINAL DISTRIBUTION ACCORDING TO age_class
+```{r }
+marginal <- margin.table(conti,margin=1)
+marginal
+```
+
+### JOINT DISTRIBUTION ACCORDING TO age_class
+
+```{r }
+joint <- prop.table(conti,margin=1)
+joint
+```
+#### conditional distribution of T_c given age_class
+
+```{r }
+condit <- prop.table(conti,margin=2)
+condit
+```
+##### finding high consumption by older people
+
+```{r }
+older_high_consumption <- conti["old", "High"]
+older_high_consumption
+```
+.
+*The number of people that showed high level of consumption is 2960 according to the consumption level threshold made above*
+.
+
+#### QUESTION 2 C 
+# HYPOTHESIS
+```{r }
+
+chi <- chisq.test(table(df$age_class, df$T_c))
+chi
+```
+```{r }
+if (chi$p.value < 0.05) {
+  print("Reject null hypothesis: age_class and T_c are associated")
+} else {
+  print("Do not reject the null hypothesis: age_class and T_c are independent")
+}
+```
+.
+*we do not reject the null hypothesis since the p-value is greater than the 5% significance threshold, therefore 
+there is no enough evidence to prove that age_class and T_c are associated*
+.
