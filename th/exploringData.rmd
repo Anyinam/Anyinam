@@ -1,0 +1,71 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-05-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+d=read.csv(file="D:\\MACHINE LEARNING\\Anyinam\\th\\NHANES.csv",
+           header=T,
+           sep=",",
+           dec=".",
+           stringsAsFactors = T)
+```
+
+```{r}
+view(d)
+str(d)
+dim(d)
+head((d$Gender))
+factor(d$Gender)
+levels(d$Gender)
+```
+
+# Reducing the number of variables
+
+```{r}
+require(tidyverse)
+dd = 
+  d %>% 
+  select(Gender,Age,Education,MaritalStatus,Work,HomeRooms,
+         Weight,Height,BMI,Testosterone,SmokeNow,RegularMarij,
+         PhysActiveDays,SleepHrsNight,SexNumPartnLife,Diabetes)
+dd
+```
+```{r}
+summary(dd$BMI)
+sd(dd$BMI)  #standard deviation
+var(dd$BMI) #variance
+IQR(dd$BMI) #interquartile range (difference between 3rd and 1st quartile)
+```
+
+```{r}
+jpeg("hist_boxplot.jpeg")
+par(mfrow=c(1,2))
+hist(dd$BMI,col = "wheat") #NB: it implicitly groups data in classes; the modal class is available
+boxplot(dd$BMI,col = "wheat")
+dev.off()
+```
+
+```{r}
+dd %>% 
+  select(Weight,Height,BMI,Testosterone) %>% 
+  drop_na() %>% 
+  cor()
+
+```
+
+```{r}
+jpeg("BMI_pairs.jpeg")
+dd %>% 
+  select(Weight,Height,BMI,Testosterone) %>% 
+  drop_na() %>%                                
+  pairs()
+
+dev.off()
+
+```
