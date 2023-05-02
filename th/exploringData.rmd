@@ -109,12 +109,68 @@ table(dd$HomeRooms)/(length(dd$HomeRooms)-people_without_HomeRooms) #relative fr
 
 ```
 
+## Frequency distribution table
 ```{r}
+freq_HomeRooms = table(dd$HomeRooms)
+jpeg("barplot_home.jpeg")
+barplot(freq_HomeRooms,ylab="Frequency",col=rainbow(30)) #Ops, maybe too much colour...
 dev.off()
-jpeg("Hist_Homerooms.jpeg")
-hist(dd$HomeRooms, xlab="BMI")
 ```
 
+## Computing the mode
 ```{r}
+#strategy 1
+dd %>% 
+  select(HomeRooms) %>% 
+  table() %>% 
+  which.max() %>% 
+  labels()
 
+#strategy 2
+which(freq_HomeRooms==max(freq_HomeRooms))[[1]]
+
+#strategy 3
+which.max(freq_HomeRooms)[[1]]
+```
+
+
+#### Qualitative variables
+```{r}
+summary(dd$Work)
+table(dd$Work)
+```
+# Frequency table
+```{r}
+work_without_na=dd$Work[is.na(dd$Work)==F]
+table(work_without_na)/length(work_without_na) #Relative Frequency
+
+```
+
+# Barplot
+
+```{r}
+jpeg("barplot_rela_work.jpeg")
+barplot(table(work_without_na)/length(work_without_na), col=c("lightgreen", "lightblue", "lightsalmon"),
+las=2, cex.names=0.6, cex.axis=0.6, main="Employment status", ylab="Relative Frequency")
+
+dev.off()
+
+```
+
+
+# Piechart
+
+```{r}
+jpeg("piechart_work.jpeg")
+pie(table(dd$Work), col=c("lightgreen", "lightblue", "lightsalmon"), cex=0.8)
+dev.off()
+```
+
+### 3D piechart
+```{r}
+require(plotrix)
+jpeg("3dpiechart.jpeg")
+pie3D(table(dd$Work), labels= unlist(labels(table(dd$Work))),
+explode=0.1, theta= pi/6, labelcex=0.8, col=c("lightgreen", "lightblue", "lightsalmon"))
+dev.off()
 ```

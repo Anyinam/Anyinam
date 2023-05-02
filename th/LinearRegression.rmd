@@ -1,0 +1,87 @@
+---
+title: "Linear Regression"
+author: "Your Name"
+date: "2023-05-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(MASS)
+data("Boston", package="MASS")
+str(Boston)
+```
+# Numeric to factor
+```{r}
+Boston$chas=factor(Boston$chas, labels=c("No", "Yes"))
+summary(Boston)
+```
+
+#Predictong the median house value
+```{r}
+Boston$medv
+require(tidyverse)
+
+Boston %>%
+    select(!chas) %>%
+    cor()
+
+jpeg("D:\\MACHINE LEARNING\\Anyinam\\th\\medv_cor.jpeg")
+{
+Boston %>%
+    select(!chas) %>%
+    pairs()    
+}
+dev.off()
+```
+
+.
+*Medv is highly correlated with rm(average number of rooms) and lstat(percentage of households with low socioeconomic status*
+.
+
+```{r}
+require(gridExtra)
+
+jpeg("D:\\MACHINE LEARNING\\Anyinam\\th\\scatter_plot_rm_lstat.jpeg")
+p1 = ggplot(Boston, aes(x=lstat, y=medv))+ 
+geom_point(alpha=0.5, col="blue")
+
+p2=ggplot(Boston, aes(x=rm, y=medv))+
+geom_point(alpha=0.5, col="green")
+
+grid.arrange(p1,p2)
+dev.off()
+
+```
+
+## Simple Linear Regression
+```{r}
+m1 =lm(medv~lstat, data=Boston)
+summary(m1)
+
+```
+
+```{r}
+jpeg("D:\\MACHINE LEARNING\\Anyinam\\th\\medv_abline.jpeg")
+par(mfrow=c(1,1))
+
+plot(Boston$lstat,Boston$medv,pch=19,cex=0.5, xlab="lstat", ylab="medv") 
+abline(m1,col="red")
+dev.off()
+```
+```{r}
+
+coefficients(m1)
+```
+.
+*The increasing of a one unit of the percentage of poor households in an area 
+is associated with a decreasing of approximately 950$ of the median house values (on average)*
+.
+
+```{r}
+confint(m1, level = 0.95)
+
+```
