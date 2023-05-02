@@ -69,3 +69,52 @@ dd %>%
 dev.off()
 
 ```
+
+```{r}
+jpeg("Scatter_plot_tidyverse.jpeg")
+par(mfrow=c(2,2))
+dd %>% 
+  select(Weight,BMI) %>% 
+  drop_na %>% 
+  plot(pch=19,col="darkblue",cex=0.4)
+
+dd %>% 
+  select(Weight,Testosterone) %>% 
+  drop_na %>% 
+  plot(pch=19,col="darkblue",cex=0.4)
+
+dd %>% 
+  select(Weight,Height) %>% 
+  drop_na %>% 
+  plot(pch=19,col="darkblue",cex=0.4)
+
+dd %>% 
+  select(Height,BMI) %>% 
+  drop_na %>% 
+  plot(pch=19,col="darkblue",cex=0.4)
+
+dev.off()
+
+```
+
+# Quantitative discrete variables
+
+```{r}
+head(dd$HomeRooms) 
+
+summary(dd$HomeRooms)
+table(dd$HomeRooms) #freq distribution
+people_without_HomeRooms=sum(is.na(dd$HomeRooms))
+table(dd$HomeRooms)/(length(dd$HomeRooms)-people_without_HomeRooms) #relative frequency distribution 
+
+```
+
+```{r}
+dev.off()
+jpeg("Hist_Homerooms.jpeg")
+hist(dd$HomeRooms, xlab="BMI")
+```
+
+```{r}
+
+```

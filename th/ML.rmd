@@ -1,0 +1,28 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-02-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Data Preprocessing
+```{r }
+jpeg("Figure.jpeg")
+x <- rnorm (100)
+y <- rnorm(100)
+plot(x,y)
+plot(x, y, xlab="X-axis", ylab="Y-axis", main= "Plot of X vs Y") 
+
+# saving the plot
+dev.off()
+```
+
+
+```{r }
+library(tidyverse)
+ library(ISLR2)
+ISLR2::Auto %>% head()
+```
