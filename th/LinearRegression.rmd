@@ -85,3 +85,271 @@ is associated with a decreasing of approximately 950$ of the median house values
 confint(m1, level = 0.95)
 
 ```
+
+# Predicting new values
+
+```{r}
+#We suppose to observe a neighborhood with a percentage of poor households equal to 11%
+#The predicted value of medv according to the model is:
+
+
+predict)m1, newdata=data.frame(lstat=11)) #E[mdev]=34.55-0.95*11=24.1 (predicted response)
+
+jpeg("D:\\MACHINE LEARNING\\Anyinam\\th\\predi_lstat.jpeg")
+plot(Boston$lstat,Boston$medv,pch=19,cex=0.5) 
+abline(m1,col="red")
+points(11,24.10,pch="X",cex=2,col="red4")
+dev.off()
+
+```
+
+
+# Cartegorical Predictors
+
+```{r}
+Boston$chas
+table(Boston$chas) #Frequency table
+
+jpeg("D:\\MACHINE LEARNING\\Anyinam\\th\\boxplot_medv_chas.jpeg")
+bocplot(medv~chas, data=Boston)
+dev.off()
+
+
+```
+
+## Second model 
+
+```{r}
+m2 <- lm(medv~chas, data=Boston)
+summary(m2)
+
+contrasts(Boston$chas)
+
+```
+
+.
+*We are dealing with a (binary) categorical predictor that only takes "1" or "0" value*
+*So our linear regression equation E[medv]=beta0+beta1*chasYes can be divided in two equations:*
+
+*- if chasYes=0 (NO), E[medv|NO]  = beta0*
+*- if chasYes=1 (YES), E[medv|YES] = beta1+beta0 --> beta1=E[medv|YES]-E[medv|NO]*
+
+*beta0 (intercept)--> expected medv for neighborhoods that do not border the river*
+*beta1 (slope)--> expected difference of medv between neighborhoods that border the river and the ones that do not*
+
+.
+
+
+```{r}
+coefficients(m2)
+
+```
+
+```{r}
+Boston %>% 
+  group_by(chas) %>% 
+  summarise(average_medv=mean(medv))
+```
+
+.
+*22.1 is the average medv for the group chas='No' and it is indeed the estimate for the intercept*
+*28.4-22.1=6.3 , which is indeed the estimate for the slope*
+.
+
+```{r}
+#confidence intervals for intercept and slope
+confint(m2)
+```
+
+.
+*By looking at the p-value (or, equivalently, at the confidence interval for the slope), we can conclude that the presence/absence of the Charles river at the border of the neighborhood does have an impact on the median value of the houses*
+.
+
+
+### Linear regression with two predictors ------------
+
+```{r}
+m3=lm(medv~lstat+rm, data=Boston)
+summary(m3)
+
+```
+
+*The model is:* 
+*E[medv] =  beta0 + beta1*lstat + beta2*rm*
+*= -1.358 - 0.642*lstat + 5.095*rm
+
+*beta0 is the intercept*
+*beta1 is the regression coefficient for the predictor lstat*
+*beta2 is the regression coefficient for the predictor rm*
+
+#(?) Are these predictors useful to predict the median house value?
+
+#F-test addresses this question 
+#
+#H0: null model (model with only intercept)
+#H1: at least one of the predictors is related to the response
+
+#p-value associated to the F-test is very small, so we reject H0
+
+
+#(?) How to interpret the model coefficients?
+
+#beta1 has a negative sign--> as the percentage of poor households increases, the expected median house value tends to decrease, BY HOLDING 'rm' FIXED
+#beta2 has a positive sign--> as the number of rooms increases, the expected median house value tends to increase, BY HOLDING 'lstat' FIXED
+
+#In particular:
+#- when the percentage of poor households increases by 1 unit, the expected median house value decreases by $642 (-0.642 * $1000) approximately, HOLDING THE PREDICTOR 'rm' FIXED (!)
+#- when the number of rooms increases by 1 unit, the expected median house value increases by $5095 (5.095 * $1000) approximately, HOLDING THE PREDICTOR 'lstat' FIXED (!)
+
+```{r}
+confint(m3, level = 0.95) #confidence intervals for the parameters 
+```
+#both beta1 and beta2 are significant (p-values<<0.05)
+
+
+#(!) N.B. the intercept beta0 is the expected response when all predictors are equal to 0;
+#         but notice that a number of rooms equal to 0 is meaningless for a house!
+
+```{r}
+predict(m3, newdata = data.frame(lstat=0, rm=0))
+
+```
+
+#When predictors cannot take the value 0, a better solution is to center predictors on 0 or standardize them 
+#(standardizing = centering on 0 and scaling such that variance is 1)
+
+?scale #by default center=TRUE and scale=TRUE
+
+#we only wants to center predictors in zero (=set their mean to zero)
+
+scale(Boston$rm, scale=F) #Boston$rm-mean(Boston$rm)
+
+mean(scale(Boston$lstat, scale=F)) #zero-mean
+mean(scale(Boston$rm, scale=F))  #zero-mean
+
+m3_std=lm(medv~scale(lstat,scale=F)+scale(rm,scale=F), data=Boston) 
+summary(m3_std) 
+
+coefficients(m3)
+coefficients(m3_std) #same beta1 and beta2, different intercept beta0
+
+#When predictors are centered in 0, the intercept is defined
+#as the expected response that we have when the original predictors are set to their means
+
+predict(m3, newdata = data.frame(lstat=mean(Boston$lstat), rm=mean(Boston$rm))) 
+#equal to the estimated intercept of the model fitted with centered predictors
+
+-1.36-0.64*mean(Boston$lstat)+5.09*mean(Boston$rm) #what 'predict' does
+#our original model was: E[medv]=1.358 - 0.642*lstat + 5.095*rm
+
+
+#Non-additive model: interaction between predictors --------
+
+#1) Interaction between two quantitative variables
+
+#We may think that the effect on the expected house value
+#of an increasing of the number of rooms in a house
+#will also depend on the percentage of poor households in the neighborhood
+
+#Two add an interaction between two predictors we write the formula in lm as follows: 
+#
+#lstat:rm  ---> it only adds an interaction between two predictors
+#OR
+#lstat*rm  ---> it corresponds to specify both the marginal predictors and their interaction
+
+#m4=lm(medv~lstat+rm+lstat:rm, data=Boston) #less compact way
+m4=lm(medv~lstat*rm, data=Boston) #alternative and more compact way
+
+summary(m4) 
+
+#The model is: 
+#E[medv] =  beta0 + beta1*lstat + beta2*rm + beta3*lstat*rm 
+#        = -29.12 + 2.19*lstat + 9.70*rm - 0.48*lstat*rm 
+#
+#beta0 is the intercept
+#beta1 is the regression coefficient for the predictor lstat
+#beta2 is the regression coefficient for the predictor rm
+#beta3 is the regression coefficient for interaction term
+
+coefficients(m4)
+
+#Notice that beta3 is estimated to be negative
+#so, for example, in a neighborhood where the percentage of poor households is very high,
+#the effect of an increasing of number of room may have 
+#a negative effect on the expected response (and vice versa)
+
+#Interpretation:
+#
+#- when the percentage of poor households increases by 1 unit, the expected median house value increases by $1000 * (2.19-0.48*rm)
+#- when the number of rooms increases by 1 unit, the expected median house value increases by $1000 * (9.70-0.48*lstat)
+
+confint(m4,level=0.9) #confidence intervals for the parameters 
+
+#all the regression coefficients are significant (p-values<<0.05)
+
+
+#(?) Try to repeat the analysis centering the predictors
+
+
+#2) Interaction between a numerical and a categorical predictor -------------
+
+m5=lm(medv~lstat+chas+lstat:chas, data=Boston) #or, more compact, medv~lstat*chas
+summary(m5)
+
+#The model E[medv] =  beta0 + beta1*lstat + beta2*chas + beta3*lstat*chas
+#can be divided in two equations: 
+#
+#if chas=YES,   E[medv|chas=YES] =  beta0 + beta1*lstat + beta2 + beta3*lstat
+#                                =  (beta0 + beta2) + (beta1 + beta3)*lstat
+#        
+#
+#if chas=NO,    E[medv|chas=NO] =  beta0 + beta1*lstat 
+
+
+#This corresponds to fitting two regression lines to the data: 
+#one for neighborhoods that borders the river, one for those that do not
+
+coef.m5=coefficients(m5)
+
+plot(Boston$medv~Boston$lstat,pch=19,cex=0.5,col=Boston$chas, xlab="Poor households (%)", ylab="Median house value (in $1000s)")
+
+abline(coef = c(coef.m5[1]+coef.m5[3], 
+                coef.m5[2]+coef.m5[4]),col="red") #regression line for chas=YES
+
+abline(coef = c(coef.m5[1],
+                coef.m5[2]),
+       col="black")                       #regression line for chas=NO
+
+legend("topright", legend = c("chas=NO","chas=YES"), col=c("black","red"), lwd=2)
+
+
+#the interaction between chas and lstat is significant (beta3 associated with small p-value),
+#meaning that changes in the percentage of poor households affect\ the expected response 
+#in different way, depending on the presence or not of the Charles river
+
+coef.m5[2]+coef.m5[4] #beta1+beta3
+coef.m5[2]            #beta1
+
+#The impact on the expected response of a change in the percentage of poor households is stronger 
+#in the neighborhoods that border the Charles river 
+#(the slope of the line for chas=NO is lower than the one of the line for chas=YES)
+
+
+
+#F-test for nested model comparison (simpler model vs more complex model)  -------------
+
+#Now we try to compare a simpler model with a more complex model (e.g. with an interaction term)
+
+#F-test as comparison between two nested models
+#
+#H0: the two models fit the data equally well
+#H1: the model with an additional term is superior
+
+m5_nointeract = lm(medv~lstat+chas, data=Boston)
+
+summary(m5_nointeract)$call  #model without interaction
+summary(m5)$call             #model with interaction
+
+#The anova function performs a F-test comparing the two nested model
+
+anova(m5_nointeract, m5)  #evidence in favor of the model with the interaction term
