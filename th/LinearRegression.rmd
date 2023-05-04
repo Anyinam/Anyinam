@@ -222,28 +222,33 @@ predict(m3, newdata = data.frame(lstat=0, rm=0))
 
 #we only wants to center predictors in zero (=set their mean to zero)
 
+```{r}
 scale(Boston$rm, scale=F) #Boston$rm-mean(Boston$rm)
 
 mean(scale(Boston$lstat, scale=F)) #zero-mean
 mean(scale(Boston$rm, scale=F))  #zero-mean
+```
 
+```{r}
 m3_std=lm(medv~scale(lstat,scale=F)+scale(rm,scale=F), data=Boston) 
 summary(m3_std) 
 
 coefficients(m3)
 coefficients(m3_std) #same beta1 and beta2, different intercept beta0
+```
 
 #When predictors are centered in 0, the intercept is defined
 #as the expected response that we have when the original predictors are set to their means
-
+```{r}
 predict(m3, newdata = data.frame(lstat=mean(Boston$lstat), rm=mean(Boston$rm))) 
+```
 #equal to the estimated intercept of the model fitted with centered predictors
 
 -1.36-0.64*mean(Boston$lstat)+5.09*mean(Boston$rm) #what 'predict' does
 #our original model was: E[medv]=1.358 - 0.642*lstat + 5.095*rm
 
 
-#Non-additive model: interaction between predictors --------
+#####  interaction between predictors --------
 
 #1) Interaction between two quantitative variables
 
@@ -258,10 +263,11 @@ predict(m3, newdata = data.frame(lstat=mean(Boston$lstat), rm=mean(Boston$rm)))
 #lstat*rm  ---> it corresponds to specify both the marginal predictors and their interaction
 
 #m4=lm(medv~lstat+rm+lstat:rm, data=Boston) #less compact way
+```{r}
 m4=lm(medv~lstat*rm, data=Boston) #alternative and more compact way
 
 summary(m4) 
-
+```
 #The model is: 
 #E[medv] =  beta0 + beta1*lstat + beta2*rm + beta3*lstat*rm 
 #        = -29.12 + 2.19*lstat + 9.70*rm - 0.48*lstat*rm 
@@ -270,8 +276,10 @@ summary(m4)
 #beta1 is the regression coefficient for the predictor lstat
 #beta2 is the regression coefficient for the predictor rm
 #beta3 is the regression coefficient for interaction term
-
+```{r}
 coefficients(m4)
+
+```
 
 #Notice that beta3 is estimated to be negative
 #so, for example, in a neighborhood where the percentage of poor households is very high,
@@ -283,7 +291,10 @@ coefficients(m4)
 #- when the percentage of poor households increases by 1 unit, the expected median house value increases by $1000 * (2.19-0.48*rm)
 #- when the number of rooms increases by 1 unit, the expected median house value increases by $1000 * (9.70-0.48*lstat)
 
+```{r}
 confint(m4,level=0.9) #confidence intervals for the parameters 
+
+```
 
 #all the regression coefficients are significant (p-values<<0.05)
 
@@ -292,10 +303,11 @@ confint(m4,level=0.9) #confidence intervals for the parameters
 
 
 #2) Interaction between a numerical and a categorical predictor -------------
-
+```{r}
 m5=lm(medv~lstat+chas+lstat:chas, data=Boston) #or, more compact, medv~lstat*chas
 summary(m5)
 
+```
 #The model E[medv] =  beta0 + beta1*lstat + beta2*chas + beta3*lstat*chas
 #can be divided in two equations: 
 #
@@ -309,8 +321,11 @@ summary(m5)
 #This corresponds to fitting two regression lines to the data: 
 #one for neighborhoods that borders the river, one for those that do not
 
+```{r}
 coef.m5=coefficients(m5)
-
+```
+```{r}
+jpeg("D:\\MACHINE LEARNING\\Anyinam\\th\\plot_itera_m5.jpeg")
 plot(Boston$medv~Boston$lstat,pch=19,cex=0.5,col=Boston$chas, xlab="Poor households (%)", ylab="Median house value (in $1000s)")
 
 abline(coef = c(coef.m5[1]+coef.m5[3], 
@@ -321,15 +336,16 @@ abline(coef = c(coef.m5[1],
        col="black")                       #regression line for chas=NO
 
 legend("topright", legend = c("chas=NO","chas=YES"), col=c("black","red"), lwd=2)
-
+dev.off()
+```
 
 #the interaction between chas and lstat is significant (beta3 associated with small p-value),
 #meaning that changes in the percentage of poor households affect\ the expected response 
 #in different way, depending on the presence or not of the Charles river
-
+```{r}
 coef.m5[2]+coef.m5[4] #beta1+beta3
 coef.m5[2]            #beta1
-
+```
 #The impact on the expected response of a change in the percentage of poor households is stronger 
 #in the neighborhoods that border the Charles river 
 #(the slope of the line for chas=NO is lower than the one of the line for chas=YES)
@@ -345,11 +361,14 @@ coef.m5[2]            #beta1
 #H0: the two models fit the data equally well
 #H1: the model with an additional term is superior
 
+```{r}
 m5_nointeract = lm(medv~lstat+chas, data=Boston)
 
 summary(m5_nointeract)$call  #model without interaction
 summary(m5)$call             #model with interaction
-
+```
 #The anova function performs a F-test comparing the two nested model
 
+```{r}
 anova(m5_nointeract, m5)  #evidence in favor of the model with the interaction term
+```
