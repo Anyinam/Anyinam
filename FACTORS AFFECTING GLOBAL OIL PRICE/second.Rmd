@@ -1,0 +1,230 @@
+**---
+title: "Analysis on FActors Affecting Global Crude Oil"
+output:
+  pdf_document: default
+  html_document: default
+date: "2023-02-08"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r }
+
+library(tree)
+library(ISLR)
+library(tidyverse)
+library(magrittr)
+```
+
+
+# Data Preprocessing
+```{r }
+
+dac <- read.csv("D:\\THESIS\\th\\second.csv")
+
+
+dsec<- dac %>%
+  rename(
+    Rgdp = Russian.GDP,
+    Roreserve=Russia.Oil.Proved.Reserve.in.billions.barrels.,
+    Gcon=Global.oil.consumption.mb.d.
+  )
+str(dsec)
+```
+
+```{r }
+# Load the corrplot package
+library(corrplot)
+
+
+# Compute the correlation matrix
+my_data <- dsec[, -1]
+cor_matrix <- cor(my_data)
+
+# Visualize the correlation matrix
+corrplot(cor_matrix, type = "upper", method = "color", 
+         tl.col = "black", tl.srt = 45, diag = FALSE)
+```
+
+```{r }
+library(ggplot2)
+
+ddg<- ggplot(data=dsec, aes(x=Rgdp, y=Oprice ))
+ddg +geom_point()+ggtitle("Distribution of Oil price and Russia GDP")
+
+
+```
+
+```{r }
+library(GGally)
+ggpairs(dsec)
+```
+
+```{r }
+rmodel1 <- lm(Oprice~. -Year, data=dsec)
+summary(rmodel1)
+mean(rmodel1$residuals^2)
+```
+
+# 2nd model
+## BAckward elimation
+```{r }
+backwardmodel=step(rmodel1,direction = "backward") 
+
+```
+
+
+```{r }
+summary(backwardmodel)
+mean(backwardmodel$residuals^2)
+```
+
+
+# 3rd model
+## Forward elimation
+```{r }
+forwardmodel=step(rmodel1,direction = "forward") 
+summary(forwardmodel)
+mean(forwardmodel$residuals^2)
+```
+
+# Bagging 
+
+```{r }
+
+set.seed(1)
+idx_tr = sample(nrow(dsec), 0.8*nrow(dsec))
+df_train = dsec[idx_tr, ]
+df_test = dsec[-idx_tr,]
+
+```
+```{r }
+
+df_test
+
+```
+
+```{r }
+library(randomForest)
+bagging = randomForest(Oprice~. -Year, data=df_train, mtry=7, importance=TRUE )
+bagging
+names(bagging)
+summary(bagging)
+```
+
+## Calculatingn the importance
+```{r }
+importance(bagging)
+varImpPlot(bagging)
+
+```
+
+### Prediction
+```{r }
+Predict_bagging = predict(bagging, df_test)
+plot(Predict_bagging, df_test$Oprice)
+abline(0,1)
+```
+
+
+#### MEan Square error
+```{r }
+MSE_bagging= mean((Predict_bagging-df_test$Oprice)^2)
+MSE_bagging
+
+```
+
+
+# randomForest
+```{r }
+MSE.Ran=rep(0,7)
+for(d in 1:5){
+  rf.dsec=randomForest(Oprice~. -Year, data=df_train, mtry=d, importance=TRUE)
+
+  predict.ran=predict(rf.dsec, df_test)
+
+  MSE.Ran[d]=mean((predict.ran-df_test$Oprice)^2)
+
+}
+MTRY=c(1:7)
+
+
+```
+
+## Plotting MSE for each size of ntree 
+
+```{r }
+plot(MTRY, MSE.Ran, type="b", col="red")
+min(MSE.Ran)
+data.frame(MTRY,MSE.Ran)
+```
+
+
+### randomForest
+```{r }
+set.seed(400)
+ran.data=randomForest(Oprice~. -Year, data=df_train, mtry=6, importance=TRUE)
+ran.data
+summary(ran.data)
+```
+
+
+#### Prediction RF of mtry=6
+```{r }
+predict_ran.data=predict(ran.data, df_test)
+MSE_ran_mtry6=mean((predict_ran.data-df_test$Oprice))
+MSE_ran_mtry6
+```
+
+##### Importance
+```{r }
+importance(ran.data)
+varImpPlot(ran.data)
+```
+
+```{r }
+
+
+importance <- data.frame(Importance = ran.data$importance[order(ran.data$importance[,1], decreasing = TRUE), 1])
+rownames(importance) <- rownames(ran.data$importance)[order(ran.data$importance[,1], decreasing = TRUE)]
+
+jpeg("barplot_importance_randomforest_second_data.jpeg")
+
+ggplot(importance, aes(x = rownames(importance), y = Importance)) + 
+  geom_bar(stat="identity", fill="steelblue") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+dev.off()
+
+```
+
+```{r }
+
+
+model_with_iteraction <- lm(Oprice~Rgdp*Roreserve+Oprod+Gcon+Roreserve+Gprod, data=dsec)
+summary(model_with_iteraction)
+coefficients(model_with_iteraction)
+```
+
+
+
+```{r }
+
+
+model_with_iteraction2 <- lm(Oprice~Oprod*Gcon+Rgdp+Roreserve+Roreserve+Gprod, data=dsec)
+summary(model_with_iteraction2)
+mean(model_with_iteraction2$residuals^2)
+```
+
+
+```{r }
+
+anova(rmodel1, model_with_iteraction2)
+```
+
+
+**

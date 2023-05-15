@@ -1,0 +1,139 @@
+---
+title: "Regression Analysis on FActors Affecting Global Crude Oil"
+output:
+  pdf_document: default
+  html_document: default
+date: "2023-02-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Data Preprocessing
+```{r }
+da <- read.csv("First.csv")
+df<-da
+str(df)
+```
+
+
+##Correlation
+```{r }
+cor(df)
+library(ggcorrplot)
+ggcorrplot(cor(df))
+
+library(psych)
+library(ggplot2)
+pairs.panels(df)
+```
+
+
+#Scatter Plot
+```{r }
+library(ggplot2)
+dd<- ggplot(data=df, aes(x=Oprod, y=Oprice ))
+dd +geom_point()+ggtitle("Distribution of Oil price and Oil Production")
+
+dd2<- ggplot(data=df, aes(x=Gprice, y=Oprice))
+dd2 +geom_point() +ggtitle("Distribution of Oil price and Gas Price")
+
+dd3<- ggplot(data=df, aes(x=Gprod, y=Oprice))
+dd3 +geom_point() + ggtitle("Distribution of Oil price and Gas Production")
+
+dd4<- ggplot(data=df, aes(x=Oreserve, y=Oprice))
+dd4 +geom_point() +ggtitle("Distribution of Oil price and Oil Proved Reserve")
+
+dd5<- ggplot(data=df, aes(x=Wrate, y=Oprice))
+dd5 +geom_point() + ggtitle("Distribution of Oil price and World Economy")
+
+```
+
+
+
+
+#Multiple Regression
+
+```{r }
+set.seed(100)
+```
+
+##First model
+
+```{r }
+mo <- lm(Oprice~., data=df)
+summary(mo)
+mean(mo$residuals^2)
+```
+
+
+
+
+###Multicolinearity
+```{r }
+library(car)
+vif(mo)
+```
+
+#2nd model
+```{r  }
+model2 <- lm(Oprice~ Gprice+Oprod+Wrate+Oreserve, data=df)
+summary(model2)
+mean(model2$residuals^2)
+
+```
+
+3rd model
+#Backward AIC
+```{r }
+model3=step(mo,direction = "backward") 
+mean(model3$residuals^2)
+```
+
+```{r }
+summary(model3)
+
+
+```
+
+
+
+#Forward AIC
+```{r }
+model4=step(mo, direction="forward")
+
+mean(model4$residuals^2)
+
+```
+```{r }
+summary(model4)
+```
+
+#BOth FOrward and BAckward
+```{r }
+model5=step(mo, direction="both")
+summary(model5)
+mean(model5$residuals^2)
+
+```
+#Mean square error
+```{r }
+mean(model2$residuals^2)
+mean(model3$residuals^2)
+mean(model4$residuals^2)
+mean(model5$residuals^2)
+```
+
+
+
+```{r }
+anova(mo, model2 )
+
+```
+
+
+
+
+
+

@@ -1,0 +1,85 @@
+da <- read.csv("First.csv")
+df<-da
+colnames(df)[which(colnames(df)=="Oil.Production.in.billion.")] <- "Oprod"
+colnames(df)[which(colnames(df) == "Oil.price")] <- "Oprice"
+colnames(df)[which(colnames(df)=="Gas.Price.USD.thousand.cubic.feet.")] <- "Gprice"
+colnames(df)[which(colnames(df) == "Gas.production.Thousand.Cubic.feet.per.year.")] <- "Gprod"
+colnames(df)[which(colnames(df)=="Oil.Proved.Reserve.in.billion.")] <- "Oreserve"
+colnames(df)[which(colnames(df) == "World.Economy.Annual.Growth.rate.of.GDP")] <- "Wrate"
+str(df)
+
+
+#Correlation
+cor(df$Oprice, df$Oprod, df$Gprice)
+library(ggcorrplot)
+ggcorrplot(cor(df))
+
+library(psych)
+pairs.panels(df)
+
+
+
+
+
+
+mo1 <- lm(Oprice~Oprod, data=df)
+summary(mo1)
+
+mo2 <- lm(Oprice~Gprice, data=df)
+summary(mo2)
+
+mo3 <- lm(Oprice~Oreserve, data=df)
+summary(mo3)
+
+mo4 <- lm(Oprice~Gprod, data=df)
+summary(mo4)
+
+mo5 <- lm(Oprice~Wrate, data=df)
+summary(mo5)
+
+library("sjPlot")
+sjt.lm(mo1)
+
+cov(df)
+
+
+
+#Scatter Plot
+library(ggplot2)
+dd<- ggplot(data=df, aes(x=Oprod, y=Oprice ))
+dd +geom_point()+ggtitle("Distribution of Oil price and Oil Production")
+
+dd2<- ggplot(data=df, aes(x=Gprice, y=Oprice))
+dd2 +geom_point() +ggtitle("Distribution of Oil price and Gas Price")
+
+dd3<- ggplot(data=df, aes(x=Gprod, y=Oprice))
+dd3 +geom_point() + ggtitle("Distribution of Oil price and Gas Production")
+
+dd4<- ggplot(data=df, aes(x=Oreserve, y=Oprice))
+dd4 +geom_point() +ggtitle("Distribution of Oil price and Oil Proved Reserve")
+
+dd5<- ggplot(data=df, aes(x=Wrate, y=Oprice))
+dd5 +geom_point() + ggtitle("Distribution of Oil price and World Economy")
+
+
+boxplot(df$Gprice)
+library(ggcorrplot)
+ggcorrplot(cor(df))
+
+
+
+mo <- lm(Oprice~., data=df)
+summary(mo)
+mean(mo$residuals^2)
+
+library(ggcorrplot)
+corrplot(cor(df))
+mo2 <- lm(Oprice~Oprod, data=df)
+summary(mo2)
+
+library("car")
+vif(mo)
+
+
+
+model2=step(mo,direction = "backward") 
